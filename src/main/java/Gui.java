@@ -91,7 +91,6 @@ public class Gui extends Stage {
             String totalRam = br.readLine();
             // Strip to just digits
             String strippedString = totalRam.replaceAll("[^\\d.]", "");
-            System.out.println(strippedString);
             long kb = Long.parseLong(strippedString);
             long gb = kb / 1000000;
             return "Total Ram: " + gb + " GB";
