@@ -3,8 +3,9 @@ import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-
 import java.io.*;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  *
@@ -28,61 +29,76 @@ public class Gui extends Stage {
         VBox root = new VBox();
         // TODO move to css file
         root.setAlignment(Pos.TOP_CENTER);
-        getOsNameAndVersion(root);
-        getDisplaySessionName(root);
+        List<String> osInfo = getOsNameAndVersion();
+        osInfo.add(getDisplaySessionName());
+        osInfo.add(getTotalRam());
+        for (String info : osInfo) {
+            root.getChildren().add(new Label(info));
+        }
         return new Scene(root);
     }
 
     /**
      *
      */
-    private void getOsNameAndVersion(VBox root) {
-        String s;
+    private List<String> getOsNameAndVersion() {
+        List<String> osInfo = new LinkedList<>();
         try {
-            Label osLabel = new Label();
-            Label versionLabel = new Label();
+            String s;
             BufferedReader br = new BufferedReader(new FileReader("/etc/os-release"));
             while ((s = br.readLine()) != null) {
                 int startIndex;
                 if(s.contains("NAME=")) {
                     startIndex = s.indexOf("=") + 1;
-                    osLabel.setText("OS: " + s.substring(startIndex).replace("\"", ""));
+                    osInfo.add("OS: " + s.substring(startIndex).replace("\"", ""));
                 } else if(s.contains("VERSION=")) {
                     startIndex = s.indexOf("=") + 1;
-                    versionLabel.setText("Version: " + s.substring(startIndex).replace("\"", ""));
+                    osInfo.add("Version: " + s.substring(startIndex).replace("\"", ""));
                 }
-                if(!osLabel.getText().isEmpty() && !versionLabel.getText().isEmpty()){
+                if(osInfo.size() == 2) {
                     break;
                 }
             }
-            root.getChildren().addAll(osLabel, versionLabel);
         } catch (Exception e) {
-
+            System.out.println("Unable to get os info");
         }
+        return osInfo;
     }
 
     /**
      *
-     * @param root
      */
-    private void getDisplaySessionName(VBox root) {
+    private String getDisplaySessionName() {
         try {
             ProcessBuilder processBuilder = new ProcessBuilder("/bin/bash", "-c", "echo ${XDG_SESSION_TYPE}");
             Process process = processBuilder.start();
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
             process.waitFor();
             String mode = reader.readLine();
-            Label displayMode = new Label("Display Server: " + mode);
-            root.getChildren().add(displayMode);
+            return "Display Server: " + mode;
         } catch (Exception exception) {
-
+            System.out.println("Unable to get display server");
+            return "";
         }
     }
 
     /**
      *
      */
-    private void getTotalRam(VBox root) {
-
+    private String getTotalRam() {
+        try {
+            BufferedReader br = new BufferedReader(new FileReader("/proc/meminfo"));
+            String totalRam = br.readLine();
+            // Strip to just digits
+            String strippedString = totalRam.replaceAll("[^\\d.]", "");
+            System.out.println(strippedString);
+            long kb = Long.parseLong(strippedString);
+            long gb = kb / 1000000;
+            return "Total Ram: " + gb + " GB";
+            // Number is in kb so convert to gb
+        } catch (Exception e) {
+            System.out.println("Unable to get ram size");
+            return "";
+        }
     }
 }
