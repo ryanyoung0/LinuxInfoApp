@@ -27,8 +27,9 @@ public class Gui extends Stage {
     public Scene initialize() {
         VBox root = new VBox();
         // TODO move to css file
-        root.setAlignment(Pos.CENTER);
+        root.setAlignment(Pos.TOP_CENTER);
         getOsNameAndVersion(root);
+        getDisplaySessionName(root);
         return new Scene(root);
     }
 
@@ -60,7 +61,28 @@ public class Gui extends Stage {
         }
     }
 
+    /**
+     *
+     * @param root
+     */
     private void getDisplaySessionName(VBox root) {
+        try {
+            ProcessBuilder processBuilder = new ProcessBuilder("/bin/bash", "-c", "echo ${XDG_SESSION_TYPE}");
+            Process process = processBuilder.start();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            process.waitFor();
+            String mode = reader.readLine();
+            Label displayMode = new Label("Display Server: " + mode);
+            root.getChildren().add(displayMode);
+        } catch (Exception exception) {
+
+        }
+    }
+
+    /**
+     *
+     */
+    private void getTotalRam(VBox root) {
 
     }
 }
